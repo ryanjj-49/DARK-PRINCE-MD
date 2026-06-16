@@ -1,9 +1,24 @@
-const { default: makeWASocket } = require("@whiskeysockets/baileys")
+const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion } = require("@whiskeysockets/baileys")
 
 async function startBot() {
-    const sock = makeWASocket()
+    const { state, saveCreds } = await useMultiFileAuthState("session")
+    const { version } = await fetchLatestBaileysVersion()
 
-    console.log("Bot started ✅")
+    const sock = makeWASocket({
+        version,
+        auth: state,
+        printQRInTerminal: false
+    })
+
+    // Pairing system
+    if (!sock.authState.creds.registered) {
+        const phoneNumber = "254712345678" // 🔴 PUT YOUR NUMBER HERE
+
+        const code = await sock.requestPairingCode(phoneNumber)
+        console.log("Your Pairing Code:", code)
+    }
+
+    sock.ev.on("creds.update", saveCreds)
 
     sock.ev.on("messages.upsert", async (m) => {
         const msg = m.messages[0]
