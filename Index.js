@@ -1,35 +1,16 @@
-const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion } = require("@whiskeysockets/baileys")
+const express = require("express");
+const app = express();
 
-async function startBot() {
-    const { state, saveCreds } = await useMultiFileAuthState("session")
-    const { version } = await fetchLatestBaileysVersion()
+const PORT = process.env.PORT || 3000;
 
-    const sock = makeWASocket({
-        version,
-        auth: state,
-        printQRInTerminal: false
-    })
+// Example route (your pairing page)
+app.get("/", (req, res) => {
+  res.send("Bot is running. Pairing system goes here.");
+});
 
-    // Pairing system
-    if (!sock.authState.creds.registered) {
-        const phoneNumber = "639302539942"  PUT YOUR NUMBER HERE
+// Start server
+app.listen(PORT, () => {
+  console.log("Server running on port " + PORT);
+});
 
-        const code = await sock.requestPairingCode(phoneNumber)
-        console.log("Your Pairing Code:", code)
-    }
-
-    sock.ev.on("creds.update", saveCreds)
-
-    sock.ev.on("messages.upsert", async (m) => {
-        const msg = m.messages[0]
-        if (!msg.message) return
-
-        const text = msg.message.conversation || msg.message.extendedTextMessage?.text
-
-        if (text === "ping") {
-            await sock.sendMessage(msg.key.remoteJid, { text: "pong 🏓" })
-        }
-    })
-}
-
-startBot()
+// 👉 Your bot logic below (WhatsApp, etc.)
